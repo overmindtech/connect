@@ -2,6 +2,7 @@ package multiconn
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nats-io/nats.go"
 )
@@ -178,6 +179,89 @@ func TestToNatsOptions(t *testing.T) {
 			}
 		} else {
 			t.Error("Expected AsyncErrorCB to non-nil")
+		}
+	})
+}
+
+func TestConnect(t *testing.T) {
+	t.Run("with a bad URL", func(t *testing.T) {
+		o := NATSConnectionOptions{
+			Servers: []string{"nats://foobar"},
+			CommonOptions: CommonOptions{
+				NumRetries: 10,
+				RetryDelay: 100 * time.Millisecond,
+			},
+		}
+
+		start := time.Now()
+
+		_, err := o.Connect()
+
+		if time.Since(start) > 1500*time.Millisecond {
+			t.Errorf("Reconnecting took too long, expected >1.5s got: %v", time.Since(start).String())
+		}
+
+		switch err.(type) {
+		case MaxRetriesError:
+			// This is good
+		default:
+			t.Errorf("Unknown error type %T", err)
+		}
+	})
+
+	t.Run("with a bad URL, but a good token", func(t *testing.T) {
+		tk := GetTestOAuthTokenClient(t)
+
+		startToken, err := tk.GetJWT()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		o := NATSConnectionOptions{
+			Servers:     []string{"nats://foobar"},
+			TokenClient: tk,
+			CommonOptions: CommonOptions{
+				NumRetries: 3,
+				RetryDelay: 100 * time.Millisecond,
+			},
+		}
+
+		_, err = o.Connect()
+
+		switch err.(type) {
+		case MaxRetriesError:
+			// Make sure we have only got one token, not three
+			currentToken, err := o.TokenClient.GetJWT()
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if currentToken != startToken {
+				t.Error("Tokens have changed")
+			}
+		default:
+			t.Errorf("Unknown error type %T", err)
+		}
+	})
+
+	t.Run("with a good URL", func(t *testing.T) {
+		o := NATSConnectionOptions{
+			Servers: []string{
+				"nats://nats:4222",
+				"nats://localhost:4222",
+			},
+			CommonOptions: CommonOptions{
+				NumRetries: 3,
+				RetryDelay: 100 * time.Millisecond,
+			},
+		}
+
+		_, err := o.Connect()
+
+		if err != nil {
+			t.Error(err)
 		}
 	})
 }

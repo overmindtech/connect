@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/nats-io/nats.go"
@@ -47,6 +48,8 @@ var ErrorHandlerDefault = func(c *nats.Conn, s *nats.Subscription, e error) {
 }
 
 type NATSConnectionOptions struct {
+	CommonOptions
+
 	Servers              []string            // List of server to connect to
 	ConnectionName       string              // The client name
 	MaxReconnects        int                 // The maximum number of reconnect attempts
@@ -59,8 +62,6 @@ type NATSConnectionOptions struct {
 	LameDuckModeHandler  nats.ConnHandler    // Runs when the connction enters "lame duck mode"
 	ErrorHandler         nats.ErrHandler     // Runs when there is a NATS error
 	AdditionalOptions    []nats.Option       // Addition options to pass to the connection
-
-	CommonOptions
 }
 
 // ToNatsOptions Converts the struct to connection string and a set of NATS
@@ -128,4 +129,58 @@ func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
 	options = append(options, o.AdditionalOptions...)
 
 	return serverString, options
+}
+
+// Connect Connects to NATS using the supplied options, including retrying if
+// unavailable
+func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
+	servers, opts := o.ToNatsOptions()
+	retriesLeft := o.NumRetries
+
+	var nc *nats.Conn
+	var enc *nats.EncodedConn
+	var err error
+
+	nats.RegisterEncoder("sdp", &sdp.ENCODER)
+
+	for retriesLeft != 0 {
+		log.WithFields(log.Fields{
+			"servers": servers,
+		}).Info("NATS connecting")
+
+		nc, err = nats.Connect(
+			servers,
+			opts...,
+		)
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Error("Error connecting to NATS")
+
+			retriesLeft--
+			time.Sleep(o.RetryDelay)
+			continue
+		}
+
+		enc, err = nats.NewEncodedConn(nc, "sdp")
+
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Error("Error creating encoded connection")
+
+			retriesLeft--
+			time.Sleep(o.RetryDelay)
+			continue
+		}
+
+		break
+	}
+
+	if err != nil {
+		return nil, MaxRetriesError{}
+	}
+
+	return enc, nil
 }

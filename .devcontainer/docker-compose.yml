@@ -1,0 +1,54 @@
+version: "3"
+services:
+  # Authenticted NATS for testing auth mechanisms
+  nats-auth:
+    image: ghcr.io/overmindtech/test-populated-nats:main
+    networks:
+      - muticonn
+
+  # Unauthenticated NATS for simpler testing
+  nats:
+    image: nats
+    networks:
+      - muticonn
+
+  # Runs the token exchange
+  nats-token-exchange:
+    image: ghcr.io/overmindtech/test-populated-nats-token-exchange:main
+    command: --nats-server nats://nats-auth:4222
+    networks:
+      - muticonn
+
+  dgraph:
+    image: dgraph/standalone
+    networks:
+      - muticonn
+
+  devcontainer:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Update 'VARIANT' to pick an LTS version of Node.js: 16, 14, 12.
+        # Append -bullseye or -buster to pin to an OS version.
+        # Use -bullseye variants on local arm64/Apple Silicon.
+        VARIANT: 1.18-bullseye
+        NODE_VERSION: none
+    volumes:
+      - ..:/workspace:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    networks:
+      - muticonn
+
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: node
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+networks:
+  muticonn:

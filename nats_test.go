@@ -251,7 +251,7 @@ func TestNATSConnect(t *testing.T) {
 		o := NATSConnectionOptions{
 			Servers: []string{
 				"nats://nats:4222",
-				"nats://localhost:4222",
+				"nats://localhost:4223",
 			},
 			CommonOptions: CommonOptions{
 				NumRetries: 3,

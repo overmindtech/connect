@@ -1,0 +1,243 @@
+name: Cross-Compile
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+jobs:
+  darwin-tests:
+    name: Darwin tests
+    runs-on: macos-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.x
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go mod vendor -v
+
+      - name: Test
+        run: go test ./...
+
+  ubuntu-tests:
+    name: Ubuntu tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.x
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go mod vendor -v
+
+      - name: Test
+        run: go test ./...
+
+  # This test runs in a container meaning that the systemd tests won't run, but
+  # we will be able to run tests for RPM
+  centos-tests:
+    name: CentOS tests
+    runs-on: ubuntu-latest
+    container: 'quay.io/centos/centos:stream8'
+    steps:
+      - name: Install C Compiler
+        run: |
+          yum group install "Development Tools" -y
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.x
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go mod vendor -v
+
+      - name: Test
+        run: go test ./...
+
+  windows-tests:
+    name: Windows tests
+    runs-on: windows-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.x
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go mod vendor -v
+
+      - name: Test
+        run: go test ./...
+
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' # Only build on pushes to main, not PRs
+    needs:
+      - darwin-tests
+      - centos-tests
+      - ubuntu-tests
+      - windows-tests
+    strategy:
+      fail-fast: true
+      matrix:
+        osArchitecture:
+          - darwin/amd64
+          - linux/386
+          - linux/amd64
+          - linux/arm
+          - linux/arm64
+          - linux/mips
+          - linux/mips64
+          - linux/mips64le
+          - linux/mipsle
+          - linux/ppc64
+          - linux/ppc64le
+          - linux/riscv64
+          - linux/s390x
+          - windows/amd64
+
+    steps:
+
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.18.x
+
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        path: '.'
+
+    # This step should set all variables required by the subsequent actions
+    - name: Expose Go variables
+      env:
+          OSARCHITECTURE: ${{ matrix.osArchitecture }}
+      run: |
+        cd ..
+
+        # Set the GOPATH to simple value that is clean
+        export GOPATH="$PWD/go"
+        mkdir -p $GOPATH/bin
+
+        # Get the os and architecture that we'll be compiling for
+        # from the build matrix
+        export GOOS=$(echo $OSARCHITECTURE | cut -f1 -d/)
+        export GOARCH=$(echo $OSARCHITECTURE | cut -f2 -d/)
+
+        echo "echo \"$GOPATH/bin\" >> $GITHUB_PATH"
+
+        # Set these values as environment variables
+        echo "GOARCH=$GOARCH" >> $GITHUB_ENV
+        echo "GOOS=$GOOS" >> $GITHUB_ENV
+        echo "GOPATH=$GOPATH" >> $GITHUB_ENV
+
+        # Also expose these as variables for the pipeline
+        echo "::set-output name=goos::$GOOS"
+        echo "::set-output name=goarch::$GOARCH"
+      shell: bash
+      id: go_env
+    
+    - name: Setup Go environment
+      env:
+        REPO_NAME: ${{ github.repository }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}
+      run: |
+        export USER_NAME=$(echo $REPO_NAME | cut -f1 -d/)
+        export PROJECT_NAME=$(echo $REPO_NAME | cut -f2 -d/)
+        export PROJECT_PARENT="$GOPATH/src/github.com/$USER_NAME"
+        export PROJECT_DIR=$PROJECT_PARENT/$PROJECT_NAME
+        
+        # Create the source location
+        echo "Creating project dir $PROJECT_PARENT"
+        mkdir -p $PROJECT_PARENT
+        
+        # Link our code in there
+        ln -s $GITHUB_WORKSPACE $PROJECT_DIR
+
+        echo "$PROJECT_PARENT contents:"
+        ls -la $PROJECT_PARENT
+        
+        echo "::set-output name=project_dir::$PROJECT_DIR"
+      shell: bash
+      id: setup
+
+    - name: Configure git token
+      uses: fregante/setup-git-token@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Environment Info
+      env:
+        PROJECT_DIR: ${{ steps.setup.outputs.project_dir }}
+      run: |
+        env
+        echo '-----------------------'
+        go env
+        echo '-----------------------'
+        echo "pwd: `pwd`"
+
+    - name: Get dependencies
+      env:
+        PROJECT_DIR: ${{ steps.setup.outputs.project_dir }}
+      run: |
+        go mod vendor -v
+
+    - name: Build
+      env:
+        PROJECT_DIR: ${{ steps.setup.outputs.project_dir }}
+      run: go build -v .
+
+    - name: Save artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: overmind-agent-${{ steps.go_env.outputs.goos }}-${{ steps.go_env.outputs.goarch }}
+        path: |
+          overmind-agent
+          overmind-agent.exe
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build
+    steps:
+      # Downloads all artifacts
+      - uses: actions/download-artifact@v2
+      # Zip them up
+      - name: Zip Artifacts
+        run: 'for i in */; do zip -r "${i%/}.zip" "$i"; done'
+      # Creates a release and attaches
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.zip"
+          generateReleaseNotes: true
+          token: ${{ secrets.GITHUB_TOKEN }}

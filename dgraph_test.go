@@ -12,7 +12,7 @@ import (
 func TestDGraphConnect(t *testing.T) {
 	t.Run("with a bad URL", func(t *testing.T) {
 		o := DGraphConnectionOptions{
-			Servers: []string{"foobar:443"},
+			Servers: []string{"bad.name:443"},
 			CommonOptions: CommonOptions{
 				NumRetries: 10,
 				RetryDelay: 100 * time.Millisecond,

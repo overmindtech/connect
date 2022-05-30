@@ -40,6 +40,10 @@ jobs:
         run: go build -v .
 
       - name: Test
+        env:
+          OVERMIND_NTE_ALLPERMS_DOMAIN: dev-qsurrmp8.eu.auth0.com
+          OVERMIND_NTE_ALLPERMS_CLIENT_ID: tLETA8lsQZR4p2qxILB1kKoXjqGJTPlG
+          OVERMIND_NTE_ALLPERMS_CLIENT_SECRET: ${{ secrets.OVERMIND_NTE_ALLPERMS_CLIENT_SECRET }}
         run: go test -race -timeout 5m -v ./...
 
   release:

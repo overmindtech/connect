@@ -183,7 +183,7 @@ func TestToNatsOptions(t *testing.T) {
 	})
 }
 
-func TestConnect(t *testing.T) {
+func TestNATSConnect(t *testing.T) {
 	t.Run("with a bad URL", func(t *testing.T) {
 		o := NATSConnectionOptions{
 			Servers: []string{"nats://foobar"},

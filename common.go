@@ -24,6 +24,18 @@ type CommonOptions struct {
 	RetryDelay time.Duration // Delay between connection attempts
 }
 
+// TotalTries Returns the total number of times we shoyuld try to connect,
+// including the first try. For positive numbers this is retries + 1, for
+// negative we just leave it alone
+func (c CommonOptions) TotalTries() int {
+	if c.NumRetries >= 0 {
+		return c.NumRetries + 1
+	} else {
+		return c.NumRetries
+	}
+
+}
+
 // ConnectionOptions Options for connecting to each service, if these are nil,
 // the service won't be connected
 type ConnectionOptions struct {

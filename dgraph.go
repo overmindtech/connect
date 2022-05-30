@@ -22,13 +22,13 @@ type DGraphConnectionOptions struct {
 
 func (d DGraphConnectionOptions) Connect() (*dgo.Dgraph, error) {
 	var dGraphClient *dgo.Dgraph
-	retriesLeft := d.NumRetries
+	tries := d.TotalTries()
 
 	if d.ConnectionTimeout == 0 {
 		d.ConnectionTimeout = ConnectionTimeoutDefault
 	}
 
-	for retriesLeft != 0 {
+	for tries != 0 {
 		connections := make([]*grpc.ClientConn, 0)
 
 		for _, server := range d.Servers {
@@ -71,7 +71,7 @@ func (d DGraphConnectionOptions) Connect() (*dgo.Dgraph, error) {
 				"servers": d.Servers,
 			}).Error("Could not connect to any DGraph endpoints")
 
-			retriesLeft--
+			tries--
 			time.Sleep(d.RetryDelay)
 			continue
 		}

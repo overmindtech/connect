@@ -55,6 +55,44 @@ func TestDGraphConnect(t *testing.T) {
 
 		ValidateDGraphConnection(t, client)
 	})
+
+	t.Run("with a good URL and defaults", func(t *testing.T) {
+		o := DGraphConnectionOptions{
+			Servers: []string{
+				"dgraph:9080",
+				"localhost:9080",
+			},
+		}
+
+		client, err := o.Connect()
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		ValidateDGraphConnection(t, client)
+	})
+
+	t.Run("with a good URL and infinite retrues", func(t *testing.T) {
+		o := DGraphConnectionOptions{
+			Servers: []string{
+				"dgraph:9080",
+				"localhost:9080",
+			},
+			CommonOptions: CommonOptions{
+				NumRetries: -1,
+				RetryDelay: 100 * time.Millisecond,
+			},
+		}
+
+		client, err := o.Connect()
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		ValidateDGraphConnection(t, client)
+	})
 }
 
 func ValidateDGraphConnection(t *testing.T, c *dgo.Dgraph) {

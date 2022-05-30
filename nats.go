@@ -142,7 +142,7 @@ func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
 // unavailable
 func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 	servers, opts := o.ToNatsOptions()
-	retriesLeft := o.NumRetries + 1
+	tries := o.TotalTries()
 
 	var nc *nats.Conn
 	var enc *nats.EncodedConn
@@ -150,7 +150,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 
 	nats.RegisterEncoder("sdp", &sdp.ENCODER)
 
-	for retriesLeft != 0 {
+	for tries != 0 {
 		log.WithFields(log.Fields{
 			"servers": servers,
 		}).Info("NATS connecting")
@@ -165,7 +165,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 				"error": err.Error(),
 			}).Error("Error connecting to NATS")
 
-			retriesLeft--
+			tries--
 			time.Sleep(o.RetryDelay)
 			continue
 		}
@@ -177,7 +177,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 				"error": err.Error(),
 			}).Error("Error creating encoded connection")
 
-			retriesLeft--
+			tries--
 			time.Sleep(o.RetryDelay)
 			continue
 		}

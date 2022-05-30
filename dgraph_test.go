@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
 )
 
@@ -52,19 +53,25 @@ func TestDGraphConnect(t *testing.T) {
 			t.Error(err)
 		}
 
-		// Run a test query to make sure it worked
-		query := `{
+		ValidateDGraphConnection(t, client)
+	})
+}
+
+func ValidateDGraphConnection(t *testing.T, c *dgo.Dgraph) {
+	t.Helper()
+
+	// Run a test query to make sure it worked
+	query := `{
 			test(func: uid(0x394c)) {
 				uid
 			}
 		}`
 
-		_, err = client.NewTxn().Do(context.Background(), &api.Request{
-			Query: query,
-		})
-
-		if err != nil {
-			t.Error(err)
-		}
+	_, err := c.NewTxn().Do(context.Background(), &api.Request{
+		Query: query,
 	})
+
+	if err != nil {
+		t.Error(err)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
+	"github.com/overmindtech/sdp-go"
 )
 
 func TestToNatsOptions(t *testing.T) {
@@ -258,12 +259,52 @@ func TestNATSConnect(t *testing.T) {
 			},
 		}
 
-		_, err := o.Connect()
+		conn, err := o.Connect()
 
 		if err != nil {
 			t.Error(err)
 		}
+
+		ValidateNATSConnection(t, conn)
 	})
+}
+
+func ValidateNATSConnection(t *testing.T, enc *nats.EncodedConn) {
+	t.Helper()
+	done := make(chan struct{})
+
+	sub, err := enc.Subscribe("test", func(r *sdp.Response) {
+		if r.Responder == "test" {
+			done <- struct{}{}
+		}
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = enc.Publish("test", &sdp.Response{
+		Responder: "test",
+		State:     sdp.Response_COMPLETE,
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Wait for the message to come back
+	select {
+	case <-done:
+		// Good
+	case <-time.After(500 * time.Millisecond):
+		t.Error("Didn't get message after 500ms")
+	}
+
+	err = sub.Unsubscribe()
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func optionsToStruct(options []nats.Option) (nats.Options, error) {

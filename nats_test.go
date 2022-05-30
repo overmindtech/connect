@@ -13,6 +13,7 @@ func TestToNatsOptions(t *testing.T) {
 		o := NATSConnectionOptions{}
 
 		expectedOptions, err := optionsToStruct([]nats.Option{
+			nats.Timeout(ConnectionTimeoutDefault),
 			nats.MaxReconnects(MaxReconnectsDefault),
 			nats.ReconnectWait(ReconnectWaitDefault),
 			nats.ReconnectJitter(ReconnectJitterDefault, ReconnectJitterDefault),
@@ -41,6 +42,10 @@ func TestToNatsOptions(t *testing.T) {
 
 		if expectedOptions.MaxReconnect != actualOptions.MaxReconnect {
 			t.Errorf("Expected MaxReconnect to be %v, got %v", expectedOptions.MaxReconnect, actualOptions.MaxReconnect)
+		}
+
+		if expectedOptions.Timeout != actualOptions.Timeout {
+			t.Errorf("Expected ConnectionTimeout to be %v, got %v", expectedOptions.Timeout, actualOptions.Timeout)
 		}
 
 		if expectedOptions.ReconnectWait != actualOptions.ReconnectWait {

@@ -13,8 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const ConnectionTimeoutDefault = 10 * time.Second
-
 type DGraphConnectionOptions struct {
 	CommonOptions
 

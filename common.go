@@ -11,6 +11,8 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+const ConnectionTimeoutDefault = 10 * time.Second
+
 type MaxRetriesError struct{}
 
 func (m MaxRetriesError) Error() string {

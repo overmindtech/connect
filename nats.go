@@ -53,6 +53,7 @@ type NATSConnectionOptions struct {
 	Servers              []string            // List of server to connect to
 	ConnectionName       string              // The client name
 	MaxReconnects        int                 // The maximum number of reconnect attempts
+	ConnectionTimeout    time.Duration       // The timeout for Dial on a connection
 	ReconnectWait        time.Duration       // Wait time between reconnect attempts
 	ReconnectJitter      time.Duration       // The upper bound of a random delay added ReconnectWait
 	TokenClient          TokenClient         // The client to use to get NATS tokens
@@ -78,6 +79,12 @@ func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
 		options = append(options, nats.MaxReconnects(o.MaxReconnects))
 	} else {
 		options = append(options, nats.MaxReconnects(MaxReconnectsDefault))
+	}
+
+	if o.ConnectionTimeout != 0 {
+		options = append(options, nats.Timeout(o.ConnectionTimeout))
+	} else {
+		options = append(options, nats.Timeout(ConnectionTimeoutDefault))
 	}
 
 	if o.ReconnectWait != 0 {

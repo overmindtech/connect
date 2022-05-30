@@ -187,7 +187,7 @@ func TestToNatsOptions(t *testing.T) {
 func TestNATSConnect(t *testing.T) {
 	t.Run("with a bad URL", func(t *testing.T) {
 		o := NATSConnectionOptions{
-			Servers: []string{"nats://bad.name"},
+			Servers: []string{"nats://badname.dontresolve.com"},
 			CommonOptions: CommonOptions{
 				NumRetries: 10,
 				RetryDelay: 100 * time.Millisecond,
@@ -220,7 +220,7 @@ func TestNATSConnect(t *testing.T) {
 		}
 
 		o := NATSConnectionOptions{
-			Servers:     []string{"nats://bad.name"},
+			Servers:     []string{"nats://badname.dontresolve.com"},
 			TokenClient: tk,
 			CommonOptions: CommonOptions{
 				NumRetries: 3,

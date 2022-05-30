@@ -53,7 +53,7 @@ func TestMultiConnect(t *testing.T) {
 		o := ConnectionOptions{
 			NATS: &NATSConnectionOptions{
 				Servers: []string{
-					"nats://bad.name:4222",
+					"nats://badname.dontresolve.com:4222",
 				},
 				CommonOptions: CommonOptions{
 					NumRetries: 3,
@@ -62,7 +62,7 @@ func TestMultiConnect(t *testing.T) {
 			},
 			DGraph: &DGraphConnectionOptions{
 				Servers: []string{
-					"bad.name:9080",
+					"badname.dontresolve.com:9080",
 				},
 				CommonOptions: CommonOptions{
 					NumRetries: 3,

@@ -142,7 +142,7 @@ func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
 // unavailable
 func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 	servers, opts := o.ToNatsOptions()
-	retriesLeft := o.NumRetries
+	retriesLeft := o.NumRetries + 1
 
 	var nc *nats.Conn
 	var enc *nats.EncodedConn

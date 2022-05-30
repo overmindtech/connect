@@ -272,6 +272,23 @@ func TestNATSConnect(t *testing.T) {
 
 		ValidateNATSConnection(t, conn)
 	})
+
+	t.Run("with a good URL but no retries", func(t *testing.T) {
+		o := NATSConnectionOptions{
+			Servers: []string{
+				"nats://nats:4222",
+				"nats://localhost:4223",
+			},
+		}
+
+		conn, err := o.Connect()
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		ValidateNATSConnection(t, conn)
+	})
 }
 
 func ValidateNATSConnection(t *testing.T, enc *nats.EncodedConn) {

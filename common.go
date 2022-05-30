@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v210"
 	"github.com/nats-io/nats.go"
 )
 

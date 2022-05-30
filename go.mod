@@ -3,7 +3,7 @@ module github.com/overmindtech/multiconn
 go 1.18
 
 require (
-	github.com/dgraph-io/dgo/v2 v2.2.0
+	github.com/dgraph-io/dgo/v210 v210.0.0-20220113041351-ba0e5dfc4c3e
 	github.com/nats-io/jwt/v2 v2.2.1-0.20220330180145-442af02fd36a
 	github.com/nats-io/nats.go v1.16.0
 	github.com/nats-io/nkeys v0.3.0
@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.8.4 // indirect

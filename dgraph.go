@@ -62,6 +62,10 @@ func (d DGraphConnectionOptions) Connect() (*dgo.Dgraph, error) {
 					"error":  err.Error(),
 				}).Error("DGraph connection failed")
 			} else {
+				log.WithFields(log.Fields{
+					"server": server,
+				}).Info("DGraph connecton opened")
+
 				connections = append(connections, c)
 			}
 		}
@@ -76,13 +80,32 @@ func (d DGraphConnectionOptions) Connect() (*dgo.Dgraph, error) {
 			continue
 		}
 
-		apiClients := make([]api.DgraphClient, 0)
+		apiClients := make([]api.DgraphClient, len(connections))
+		serverFields := make(log.Fields)
 
-		for _, conn := range connections {
-			apiClients = append(apiClients, api.NewDgraphClient(conn))
+		for i, conn := range connections {
+			var versionString string
+
+			apiClients[i] = api.NewDgraphClient(conn)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			// Check the version and add to log fields
+			version, err := apiClients[i].CheckVersion(ctx, &api.Check{})
+
+			if err != nil || version == nil {
+				versionString = "unknown version"
+			} else {
+				versionString = version.Tag
+			}
+
+			serverFields[conn.Target()] = versionString
 		}
 
 		dGraphClient = dgo.NewDgraphClient(apiClients...)
+
+		log.WithFields(serverFields).Info("DGraph client created")
 
 		break
 	}

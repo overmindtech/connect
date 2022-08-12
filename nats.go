@@ -16,35 +16,62 @@ const ReconnectWaitDefault = 1 * time.Second
 const ReconnectJitterDefault = 5 * time.Second
 
 var DisconnectErrHandlerDefault = func(c *nats.Conn, e error) {
-	log.WithFields(log.Fields{
-		"error":   e,
-		"address": c.ConnectedAddr(),
-	}).Error("NATS disconnected")
+	fields := log.Fields{
+		"error": e,
+	}
+
+	if c != nil {
+		fields["address"] = c.ConnectedAddr()
+	}
+
+	log.WithFields(fields).Error("NATS disconnected")
 }
 var ReconnectHandlerDefault = func(c *nats.Conn) {
-	log.WithFields(log.Fields{
-		"reconnects": c.Reconnects,
-		"ServerID":   c.ConnectedServerId(),
-		"URL:":       c.ConnectedUrl(),
-	}).Info("NATS reconnected")
+	fields := log.Fields{}
+
+	if c != nil {
+		fields["reconnects"] = c.Reconnects
+		fields["ServerID"] = c.ConnectedServerId()
+		fields["URL"] = c.ConnectedUrl()
+
+	}
+
+	log.WithFields(fields).Info("NATS reconnected")
 }
 var ClosedHandlerDefault = func(c *nats.Conn) {
-	log.WithFields(log.Fields{
-		"error": c.LastError(),
-	}).Info("NATS connection closed")
+	fields := log.Fields{}
+
+	if c != nil {
+		fields["error"] = c.LastError()
+	}
+
+	log.WithFields(fields).Info("NATS connection closed")
 }
 var LameDuckModeHandlerDefault = func(c *nats.Conn) {
-	log.WithFields(log.Fields{
-		"address": c.ConnectedAddr(),
-	}).Info("NATS server has entered lame duck mode")
+	fields := log.Fields{}
+
+	if c != nil {
+		fields["address"] = c.ConnectedAddr()
+
+	}
+
+	log.WithFields(fields).Info("NATS server has entered lame duck mode")
 }
 var ErrorHandlerDefault = func(c *nats.Conn, s *nats.Subscription, e error) {
-	log.WithFields(log.Fields{
-		"error":   e,
-		"address": c.ConnectedAddr(),
-		"subject": s.Subject,
-		"queue":   s.Queue,
-	}).Error("NATS error")
+	fields := log.Fields{
+		"error": e,
+	}
+
+	if c != nil {
+		fields["address"] = c.ConnectedAddr()
+	}
+
+	if s != nil {
+		fields["subject"] = s.Subject
+		fields["queue"] = s.Queue
+	}
+
+	log.WithFields(fields).Error("NATS error")
 }
 
 type NATSConnectionOptions struct {

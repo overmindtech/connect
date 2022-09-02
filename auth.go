@@ -152,7 +152,7 @@ func (o *OAuthTokenClient) generateJWT() error {
 	o.jwt, response, err = request.Execute()
 
 	if err != nil {
-		return fmt.Errorf("getting NATS token failed: %v\nResponse: %v", err, response)
+		return fmt.Errorf("getting NATS token failed: %v\nRequest URL: %v", err, response.Request.URL.String())
 	}
 
 	return nil

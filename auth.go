@@ -2,6 +2,7 @@ package multiconn
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -152,7 +153,13 @@ func (o *OAuthTokenClient) generateJWT() error {
 	o.jwt, response, err = request.Execute()
 
 	if err != nil {
-		return fmt.Errorf("getting NATS token failed: %v\nRequest URL: %v", err, response.Request.URL.String())
+		errString := fmt.Sprintf("getting NATS token failed: %v", err.Error())
+
+		if response != nil && response.Request != nil && response.Request.URL != nil {
+			errString = errString + fmt.Sprintf(". Request URL: %v", response.Request.URL.String())
+		}
+
+		return errors.New(errString)
 	}
 
 	return nil

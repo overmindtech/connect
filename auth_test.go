@@ -142,14 +142,22 @@ func EnsureTestAccount(a *tokenx.AuthApiService) error {
 
 func GetWorkingTokenExchange() (string, error) {
 	var err error
+	errMap := make(map[string]error)
 
 	for _, url := range tokenExchangeURLs {
 		if err = testURL(url); err == nil {
 			return url, nil
 		}
+		errMap[url] = err
 	}
 
-	return "", fmt.Errorf("no working token exchanges found: %v", err)
+	var errString string
+
+	for url, err := range errMap {
+		errString = errString + fmt.Sprintf("  %v: %v\n", url, err.Error())
+	}
+
+	return "", fmt.Errorf("no working token exchanges found:\n%v", err)
 }
 
 func testURL(testURL string) error {

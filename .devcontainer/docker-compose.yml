@@ -13,7 +13,7 @@ services:
       - muticonn
 
   api-server:
-    image: ghcr.io/overmindtech/test-populated-api-server:local
+    image: ghcr.io/overmindtech/test-populated-api-server:main
     command: --nats-url nats://nats-auth:4222 --disable-kube
     networks:
       - muticonn

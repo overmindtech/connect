@@ -328,7 +328,7 @@ func ValidateNATSConnection(t *testing.T, enc *nats.EncodedConn) {
 
 	err = enc.Publish("test", &sdp.Response{
 		Responder: "test",
-		State:     sdp.Response_COMPLETE,
+		State:     sdp.ResponderState_COMPLETE,
 	})
 
 	if err != nil {

@@ -1,7 +1,6 @@
 package multiconn
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -10,12 +9,11 @@ import (
 	"time"
 
 	"github.com/nats-io/nkeys"
-	"github.com/overmindtech/tokenx-client"
 )
 
 var tokenExchangeURLs = []string{
-	"http://nats-token-exchange:8080/api/nats",
-	"http://localhost:8080/api/nats",
+	"http://api-server:8080",
+	"http://localhost:8080",
 }
 
 func TestBasicTokenClient(t *testing.T) {
@@ -87,6 +85,7 @@ func GetTestOAuthTokenClient(t *testing.T) *OAuthTokenClient {
 	return NewOAuthTokenClient(
 		clientID,
 		clientSecret,
+		"org_hdeUXbB55sMMvJLa",
 		fmt.Sprintf("https://%v/oauth/token", domain),
 		exchangeURL,
 	)
@@ -94,8 +93,6 @@ func GetTestOAuthTokenClient(t *testing.T) *OAuthTokenClient {
 
 func TestOAuthTokenClient(t *testing.T) {
 	c := GetTestOAuthTokenClient(t)
-
-	EnsureTestAccount(c.natsClient.AuthApi)
 
 	var err error
 
@@ -114,30 +111,6 @@ func TestOAuthTokenClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-}
-
-var TestAccountCreated bool
-
-func EnsureTestAccount(a *tokenx.AuthApiService) error {
-	if !TestAccountCreated {
-		// This is the account that OAuth embeds in test tokens and therefore must
-		// be created
-		name := "test-account"
-
-		req := a.AccountsPost(context.Background()).AccountRequestData(tokenx.AccountRequestData{
-			Name: &name,
-		})
-
-		_, _, err := req.Execute()
-
-		if err != nil {
-			return err
-		}
-
-		TestAccountCreated = true
-	}
-
-	return nil
 }
 
 func GetWorkingTokenExchange() (string, error) {

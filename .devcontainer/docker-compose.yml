@@ -12,10 +12,9 @@ services:
     networks:
       - muticonn
 
-  # Runs the token exchange
-  nats-token-exchange:
-    image: ghcr.io/overmindtech/test-populated-nats-token-exchange:main
-    command: --nats-server nats://nats-auth:4222
+  api-server:
+    image: ghcr.io/overmindtech/test-populated-api-server:local
+    command: --nats-url nats://nats-auth:4222 --disable-kube
     networks:
       - muticonn
 
@@ -32,7 +31,7 @@ services:
         # Update 'VARIANT' to pick an LTS version of Node.js: 16, 14, 12.
         # Append -bullseye or -buster to pin to an OS version.
         # Use -bullseye variants on local arm64/Apple Silicon.
-        VARIANT: 1.18-bullseye
+        VARIANT: 1.19-bullseye
         NODE_VERSION: none
     volumes:
       - ..:/workspace:cached

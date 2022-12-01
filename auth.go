@@ -173,7 +173,7 @@ func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 			UserName:   &hostname,
 		}).Execute()
 	} else {
-		// Explicitly requerst an org
+		// Explicitly request an org
 		o.jwt, response, err = o.natsClient.AdminApi.AdminCreateToken(ctx, o.org).TokenRequestData(overmind.TokenRequestData{
 			UserPubKey: &pubKey,
 			UserName:   &hostname,

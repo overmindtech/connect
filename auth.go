@@ -43,7 +43,7 @@ func NewBasicTokenClient(token string, keys nkeys.KeyPair) *BasicTokenClient {
 	}
 }
 
-func (b *BasicTokenClient) GetJWT(_ context.Context) (string, error) {
+func (b *BasicTokenClient) GetJWT() (string, error) {
 	return b.staticToken, nil
 }
 

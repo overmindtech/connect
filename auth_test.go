@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -18,17 +17,19 @@ var tokenExchangeURLs = []string{
 }
 
 func TestBasicTokenClient(t *testing.T) {
+	var c TokenClient
+
 	keys, err := nkeys.CreateUser()
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c := NewBasicTokenClient("tokeny_mc_tokenface", keys)
+	c = NewBasicTokenClient("tokeny_mc_tokenface", keys)
 
 	var token string
 
-	token, err = c.GetJWT(context.Background())
+	token, err = c.GetJWT()
 
 	if err != nil {
 		t.Error(err)

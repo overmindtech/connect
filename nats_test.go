@@ -201,8 +201,15 @@ func TestNATSConnect(t *testing.T) {
 
 		_, err := o.Connect()
 
-		if time.Since(start) > 2000*time.Millisecond {
-			t.Errorf("Reconnecting took too long, expected <2s got: %v", time.Since(start).String())
+		// Just sanity check the duration here, it should be less than 1s and it
+		// should be more than... Some larger number of seconds. This is very
+		// much dependant on how long it takes to not resolve the name
+		if time.Since(start) < 1*time.Second {
+			t.Errorf("Reconnecting didn't take long enough, expected >1s got: %v", time.Since(start).String())
+		}
+
+		if time.Since(start) > 3*time.Second {
+			t.Errorf("Reconnecting took too long, expected <3s got: %v", time.Since(start).String())
 		}
 
 		switch err.(type) {

@@ -1,4 +1,4 @@
-package multiconn
+package connect
 
 import (
 	"context"
@@ -43,7 +43,7 @@ func NewBasicTokenClient(token string, keys nkeys.KeyPair) *BasicTokenClient {
 	}
 }
 
-func (b *BasicTokenClient) GetJWT() (string, error) {
+func (b *BasicTokenClient) GetJWT(_ context.Context) (string, error) {
 	return b.staticToken, nil
 }
 
@@ -64,6 +64,22 @@ type OAuthTokenClient struct {
 	keys nkeys.KeyPair
 }
 
+// ClientCredentialsConfig Authenticates to Overmind using the Client
+// Credentials flow
+// https://auth0.com/docs/get-started/authentication-and-authorization-flow/client-credentials-flow
+type ClientCredentialsConfig struct {
+	// The ClientID of the application that we'll be authenticating as
+	ClientID string
+	// ClientSecret that cirresponds to the ClientID
+	ClientSecret string
+	// If Org is specified, then the ClientID must have `admin:write`
+	// permissions in order to be able to request a token for any org. If this
+	// is omitted then the org will be detmined basded on the org included in
+	// the resulting token. This will be stored in either the `org_id` or
+	// `https://api.overmind.tech/org_id_override` claims
+	Org string
+}
+
 // NewOAuthTokenClient Generates a token client that authenticates to OAuth
 // using the client credentials flow, then uses that auth to get a NATS token.
 // `clientID` and `clientSecret` are used to authenticate using the client
@@ -73,10 +89,10 @@ type OAuthTokenClient struct {
 //
 // Tokens will be for the org specified under `org`. Note that the client must
 // have admin rights for this
-func NewOAuthTokenClient(clientID string, clientSecret string, org string, oAuthTokenURL string, overmindAPIURL string) *OAuthTokenClient {
+func NewOAuthTokenClient(oAuthTokenURL string, overmindAPIURL string, flowConfig ClientCredentialsConfig) *OAuthTokenClient {
 	conf := &clientcredentials.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
+		ClientID:     flowConfig.ClientID,
+		ClientSecret: flowConfig.ClientSecret,
 		TokenURL:     oAuthTokenURL,
 		EndpointParams: url.Values{
 			"audience": []string{"https://api.overmind.tech"},
@@ -84,7 +100,7 @@ func NewOAuthTokenClient(clientID string, clientSecret string, org string, oAuth
 	}
 
 	// Get an authenticated client that we can then make more HTTP calls with
-	authenticatedClient := conf.Client(context.TODO())
+	authenticatedClient := conf.Client(context.Background())
 
 	// Configure the token exchange client to use the newly authenticated HTTP
 	// client among other things
@@ -108,7 +124,7 @@ func NewOAuthTokenClient(clientID string, clientSecret string, org string, oAuth
 		oAuthClient: conf,
 		natsConfig:  tokenExchangeConf,
 		natsClient:  nClient,
-		org:         org,
+		org:         flowConfig.Org,
 	}
 }
 
@@ -122,7 +138,7 @@ func (o *OAuthTokenClient) generateKeys() error {
 }
 
 // generateJWT Gets a new JWT from the auth API
-func (o *OAuthTokenClient) generateJWT() error {
+func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 	// If we don't yet have keys generate them
 	if o.keys == nil {
 		err := o.generateKeys()
@@ -150,12 +166,19 @@ func (o *OAuthTokenClient) generateJWT() error {
 	}
 
 	// Create the request for a NATS token
-	request := o.natsClient.AdminApi.AdminCreateToken(context.Background(), o.org).TokenRequestData(overmind.TokenRequestData{
-		UserPubKey: &pubKey,
-		UserName:   &hostname,
-	})
-
-	o.jwt, response, err = request.Execute()
+	if o.org == "" {
+		// Use the regular API and let it determine what our org should be
+		o.jwt, response, err = o.natsClient.CoreApi.CreateToken(ctx).TokenRequestData(overmind.TokenRequestData{
+			UserPubKey: &pubKey,
+			UserName:   &hostname,
+		}).Execute()
+	} else {
+		// Explicitly requerst an org
+		o.jwt, response, err = o.natsClient.AdminApi.AdminCreateToken(ctx, o.org).TokenRequestData(overmind.TokenRequestData{
+			UserPubKey: &pubKey,
+			UserName:   &hostname,
+		}).Execute()
+	}
 
 	if err != nil {
 		errString := fmt.Sprintf("getting NATS token failed: %v", err.Error())
@@ -173,7 +196,7 @@ func (o *OAuthTokenClient) generateJWT() error {
 func (o *OAuthTokenClient) GetJWT() (string, error) {
 	// If we don't yet have a JWT, generate one
 	if o.jwt == "" {
-		err := o.generateJWT()
+		err := o.generateJWT(context.Background())
 
 		if err != nil {
 			return "", err
@@ -194,7 +217,7 @@ func (o *OAuthTokenClient) GetJWT() (string, error) {
 
 	if len(vr.Errors()) != 0 {
 		// Regenerate the token
-		err := o.generateJWT()
+		err := o.generateJWT(context.Background())
 
 		if err != nil {
 			return "", err

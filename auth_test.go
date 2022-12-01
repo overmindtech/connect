@@ -1,6 +1,7 @@
-package multiconn
+package connect
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -27,7 +28,7 @@ func TestBasicTokenClient(t *testing.T) {
 
 	var token string
 
-	token, err = c.GetJWT()
+	token, err = c.GetJWT(context.Background())
 
 	if err != nil {
 		t.Error(err)
@@ -82,12 +83,16 @@ func GetTestOAuthTokenClient(t *testing.T) *OAuthTokenClient {
 		t.Fatal(err)
 	}
 
+	flowConfig := ClientCredentialsConfig{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Org:          "org_hdeUXbB55sMMvJLa",
+	}
+
 	return NewOAuthTokenClient(
-		clientID,
-		clientSecret,
-		"org_hdeUXbB55sMMvJLa",
 		fmt.Sprintf("https://%v/oauth/token", domain),
 		exchangeURL,
+		flowConfig,
 	)
 }
 

@@ -1,4 +1,4 @@
-package multiconn
+package connect
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 
 func TestToNatsOptions(t *testing.T) {
 	t.Run("with defaults", func(t *testing.T) {
-		o := NATSConnectionOptions{}
+		o := NATSOptions{}
 
 		expectedOptions, err := optionsToStruct([]nats.Option{
 			nats.Timeout(ConnectionTimeoutDefault),
@@ -89,7 +89,7 @@ func TestToNatsOptions(t *testing.T) {
 		var lameDuckModeHandlerUsed bool
 		var errorHandlerUsed bool
 
-		o := NATSConnectionOptions{
+		o := NATSOptions{
 			Servers:              []string{"one", "two"},
 			ConnectionName:       "foo",
 			MaxReconnects:        999,
@@ -191,12 +191,10 @@ func TestToNatsOptions(t *testing.T) {
 
 func TestNATSConnect(t *testing.T) {
 	t.Run("with a bad URL", func(t *testing.T) {
-		o := NATSConnectionOptions{
-			Servers: []string{"nats://badname.dontresolve.com"},
-			CommonOptions: CommonOptions{
-				NumRetries: 10,
-				RetryDelay: 100 * time.Millisecond,
-			},
+		o := NATSOptions{
+			Servers:    []string{"nats://badname.dontresolve.com"},
+			NumRetries: 10,
+			RetryDelay: 100 * time.Millisecond,
 		}
 
 		start := time.Now()
@@ -204,7 +202,7 @@ func TestNATSConnect(t *testing.T) {
 		_, err := o.Connect()
 
 		if time.Since(start) > 1500*time.Millisecond {
-			t.Errorf("Reconnecting took too long, expected >1.5s got: %v", time.Since(start).String())
+			t.Errorf("Reconnecting took too long, expected <1.5s got: %v", time.Since(start).String())
 		}
 
 		switch err.(type) {
@@ -224,13 +222,11 @@ func TestNATSConnect(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		o := NATSConnectionOptions{
+		o := NATSOptions{
 			Servers:     []string{"nats://badname.dontresolve.com"},
 			TokenClient: tk,
-			CommonOptions: CommonOptions{
-				NumRetries: 3,
-				RetryDelay: 100 * time.Millisecond,
-			},
+			NumRetries:  3,
+			RetryDelay:  100 * time.Millisecond,
 		}
 
 		_, err = o.Connect()
@@ -253,28 +249,26 @@ func TestNATSConnect(t *testing.T) {
 	})
 
 	t.Run("with a good URL", func(t *testing.T) {
-		o := NATSConnectionOptions{
+		o := NATSOptions{
 			Servers: []string{
 				"nats://nats:4222",
 				"nats://localhost:4223",
 			},
-			CommonOptions: CommonOptions{
-				NumRetries: 3,
-				RetryDelay: 100 * time.Millisecond,
-			},
+			NumRetries: 3,
+			RetryDelay: 100 * time.Millisecond,
 		}
 
 		conn, err := o.Connect()
 
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		ValidateNATSConnection(t, conn)
 	})
 
 	t.Run("with a good URL but no retries", func(t *testing.T) {
-		o := NATSConnectionOptions{
+		o := NATSOptions{
 			Servers: []string{
 				"nats://nats:4222",
 				"nats://localhost:4223",
@@ -284,22 +278,20 @@ func TestNATSConnect(t *testing.T) {
 		conn, err := o.Connect()
 
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		ValidateNATSConnection(t, conn)
 	})
 
 	t.Run("with a good URL and infinite retries", func(t *testing.T) {
-		o := NATSConnectionOptions{
+		o := NATSOptions{
 			Servers: []string{
 				"nats://nats:4222",
 				"nats://localhost:4223",
 			},
-			CommonOptions: CommonOptions{
-				NumRetries: -1,
-				RetryDelay: 100 * time.Millisecond,
-			},
+			NumRetries: -1,
+			RetryDelay: 100 * time.Millisecond,
 		}
 
 		conn, err := o.Connect()

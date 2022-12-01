@@ -1,4 +1,4 @@
-module github.com/overmindtech/multiconn
+module github.com/overmindtech/connect
 
 go 1.19
 

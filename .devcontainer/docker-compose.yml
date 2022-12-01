@@ -18,11 +18,6 @@ services:
     networks:
       - muticonn
 
-  dgraph:
-    image: dgraph/standalone
-    networks:
-      - muticonn
-
   devcontainer:
     build: 
       context: .

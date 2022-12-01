@@ -1,4 +1,4 @@
-package multiconn
+package connect
 
 import (
 	"strings"
@@ -14,6 +14,13 @@ import (
 const MaxReconnectsDefault = -1
 const ReconnectWaitDefault = 1 * time.Second
 const ReconnectJitterDefault = 5 * time.Second
+const ConnectionTimeoutDefault = 10 * time.Second
+
+type MaxRetriesError struct{}
+
+func (m MaxRetriesError) Error() string {
+	return "maximum retries reached"
+}
 
 var DisconnectErrHandlerDefault = func(c *nats.Conn, e error) {
 	fields := log.Fields{
@@ -74,9 +81,7 @@ var ErrorHandlerDefault = func(c *nats.Conn, s *nats.Subscription, e error) {
 	log.WithFields(fields).Error("NATS error")
 }
 
-type NATSConnectionOptions struct {
-	CommonOptions
-
+type NATSOptions struct {
 	Servers              []string            // List of server to connect to
 	ConnectionName       string              // The client name
 	MaxReconnects        int                 // The maximum number of reconnect attempts
@@ -90,11 +95,13 @@ type NATSConnectionOptions struct {
 	LameDuckModeHandler  nats.ConnHandler    // Runs when the connction enters "lame duck mode"
 	ErrorHandler         nats.ErrHandler     // Runs when there is a NATS error
 	AdditionalOptions    []nats.Option       // Addition options to pass to the connection
+	NumRetries           int                 // How many times to retry connecting initially, use -1 to retry indefinitely
+	RetryDelay           time.Duration       // Delay between connection attempts
 }
 
 // ToNatsOptions Converts the struct to connection string and a set of NATS
 // options
-func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
+func (o NATSOptions) ToNatsOptions() (string, []nats.Option) {
 	serverString := strings.Join(o.Servers, ",")
 	options := make([]nats.Option, 0)
 
@@ -167,9 +174,16 @@ func (o NATSConnectionOptions) ToNatsOptions() (string, []nats.Option) {
 
 // Connect Connects to NATS using the supplied options, including retrying if
 // unavailable
-func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
+func (o NATSOptions) Connect() (*nats.EncodedConn, error) {
 	servers, opts := o.ToNatsOptions()
-	tries := o.TotalTries()
+
+	var triesLeft int
+
+	if o.NumRetries >= 0 {
+		triesLeft = o.NumRetries + 1
+	} else {
+		triesLeft = -1
+	}
 
 	var nc *nats.Conn
 	var enc *nats.EncodedConn
@@ -177,7 +191,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 
 	nats.RegisterEncoder("sdp", &sdp.ENCODER)
 
-	for tries != 0 {
+	for triesLeft != 0 {
 		log.WithFields(log.Fields{
 			"servers": servers,
 		}).Info("NATS connecting")
@@ -192,7 +206,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 				"error": err.Error(),
 			}).Error("Error connecting to NATS")
 
-			tries--
+			triesLeft--
 			time.Sleep(o.RetryDelay)
 			continue
 		}
@@ -204,7 +218,7 @@ func (o NATSConnectionOptions) Connect() (*nats.EncodedConn, error) {
 				"error": err.Error(),
 			}).Error("Error creating encoded connection")
 
-			tries--
+			triesLeft--
 			time.Sleep(o.RetryDelay)
 			continue
 		}

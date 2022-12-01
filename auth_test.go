@@ -1,4 +1,4 @@
-package multiconn
+package connect
 
 import (
 	"fmt"
@@ -17,13 +17,15 @@ var tokenExchangeURLs = []string{
 }
 
 func TestBasicTokenClient(t *testing.T) {
+	var c TokenClient
+
 	keys, err := nkeys.CreateUser()
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c := NewBasicTokenClient("tokeny_mc_tokenface", keys)
+	c = NewBasicTokenClient("tokeny_mc_tokenface", keys)
 
 	var token string
 
@@ -82,12 +84,16 @@ func GetTestOAuthTokenClient(t *testing.T) *OAuthTokenClient {
 		t.Fatal(err)
 	}
 
+	flowConfig := ClientCredentialsConfig{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Org:          "org_hdeUXbB55sMMvJLa",
+	}
+
 	return NewOAuthTokenClient(
-		clientID,
-		clientSecret,
-		"org_hdeUXbB55sMMvJLa",
 		fmt.Sprintf("https://%v/oauth/token", domain),
 		exchangeURL,
+		flowConfig,
 	)
 }
 

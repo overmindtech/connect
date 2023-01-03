@@ -7,7 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.20.0
 	github.com/nats-io/nkeys v0.3.0
 	github.com/overmindtech/api-client v0.5.0
-	github.com/overmindtech/sdp-go v0.13.7
+	github.com/overmindtech/sdp-go v0.14.0
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/oauth2 v0.3.0
 )

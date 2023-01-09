@@ -188,8 +188,6 @@ func (o NATSOptions) Connect() (sdp.EncodedConnection, error) {
 	var nc *nats.Conn
 	var err error
 
-	nats.RegisterEncoder("sdp", &sdp.ENCODER)
-
 	for triesLeft != 0 {
 		log.WithFields(log.Fields{
 			"servers": servers,

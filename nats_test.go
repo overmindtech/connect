@@ -316,7 +316,7 @@ func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 	t.Helper()
 	done := make(chan struct{})
 
-	sub, err := ec.Subscribe("test", sdp.NewMsgHandler("test", func(ctx context.Context, r *sdp.Response) {
+	sub, err := ec.Subscribe("test", sdp.NewResponseHandler("test", func(ctx context.Context, r *sdp.Response) {
 		if r.Responder == "test" {
 			done <- struct{}{}
 		}

@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -311,21 +312,21 @@ func TestNATSConnect(t *testing.T) {
 	})
 }
 
-func ValidateNATSConnection(t *testing.T, enc *nats.EncodedConn) {
+func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 	t.Helper()
 	done := make(chan struct{})
 
-	sub, err := enc.Subscribe("test", func(r *sdp.Response) {
+	sub, err := ec.Subscribe("test", sdp.NewResponseHandler("test", func(ctx context.Context, r *sdp.Response) {
 		if r.Responder == "test" {
 			done <- struct{}{}
 		}
-	})
+	}))
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = enc.Publish("test", &sdp.Response{
+	err = ec.Publish(context.Background(), "test", &sdp.Response{
 		Responder: "test",
 		State:     sdp.ResponderState_COMPLETE,
 	})

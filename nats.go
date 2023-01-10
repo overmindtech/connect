@@ -174,7 +174,7 @@ func (o NATSOptions) ToNatsOptions() (string, []nats.Option) {
 
 // Connect Connects to NATS using the supplied options, including retrying if
 // unavailable
-func (o NATSOptions) Connect() (*nats.EncodedConn, error) {
+func (o NATSOptions) Connect() (sdp.EncodedConnection, error) {
 	servers, opts := o.ToNatsOptions()
 
 	var triesLeft int
@@ -186,10 +186,7 @@ func (o NATSOptions) Connect() (*nats.EncodedConn, error) {
 	}
 
 	var nc *nats.Conn
-	var enc *nats.EncodedConn
 	var err error
-
-	nats.RegisterEncoder("sdp", &sdp.ENCODER)
 
 	for triesLeft != 0 {
 		log.WithFields(log.Fields{
@@ -211,24 +208,12 @@ func (o NATSOptions) Connect() (*nats.EncodedConn, error) {
 			continue
 		}
 
-		enc, err = nats.NewEncodedConn(nc, "sdp")
-
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-			}).Error("Error creating encoded connection")
-
-			triesLeft--
-			time.Sleep(o.RetryDelay)
-			continue
-		}
-
 		break
 	}
 
 	if err != nil {
-		return nil, MaxRetriesError{}
+		return &sdp.EncodedConnectionImpl{}, MaxRetriesError{}
 	}
 
-	return enc, nil
+	return &sdp.EncodedConnectionImpl{Conn: nc}, nil
 }

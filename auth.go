@@ -12,6 +12,8 @@ import (
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nkeys"
 	overmind "github.com/overmindtech/api-client"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -101,6 +103,8 @@ func NewOAuthTokenClient(oAuthTokenURL string, overmindAPIURL string, flowConfig
 
 	// Get an authenticated client that we can then make more HTTP calls with
 	authenticatedClient := conf.Client(context.Background())
+	// inject otelhttp propagation
+	authenticatedClient.Transport = otelhttp.NewTransport(authenticatedClient.Transport)
 
 	// Configure the token exchange client to use the newly authenticated HTTP
 	// client among other things
@@ -194,11 +198,15 @@ func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 }
 
 func (o *OAuthTokenClient) GetJWT() (string, error) {
+	ctx, span := tracer.Start(context.Background(), "connect.GetJWT")
+	defer span.End()
+
 	// If we don't yet have a JWT, generate one
 	if o.jwt == "" {
-		err := o.generateJWT(context.Background())
+		err := o.generateJWT(ctx)
 
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return "", err
 		}
 	}
@@ -206,6 +214,7 @@ func (o *OAuthTokenClient) GetJWT() (string, error) {
 	claims, err := jwt.DecodeUserClaims(o.jwt)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return o.jwt, err
 	}
 
@@ -217,13 +226,15 @@ func (o *OAuthTokenClient) GetJWT() (string, error) {
 
 	if len(vr.Errors()) != 0 {
 		// Regenerate the token
-		err := o.generateJWT(context.Background())
+		err := o.generateJWT(ctx)
 
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return "", err
 		}
 	}
 
+	span.SetStatus(codes.Ok, "Completed")
 	return o.jwt, nil
 }
 

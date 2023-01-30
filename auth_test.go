@@ -12,8 +12,8 @@ import (
 )
 
 var tokenExchangeURLs = []string{
-	"http://api-server:8080",
-	"http://localhost:8080",
+	"http://api-server:8080/api",
+	"http://localhost:8080/api",
 }
 
 func TestBasicTokenClient(t *testing.T) {
@@ -87,7 +87,7 @@ func GetTestOAuthTokenClient(t *testing.T) *OAuthTokenClient {
 	flowConfig := ClientCredentialsConfig{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		Org:          "org_hdeUXbB55sMMvJLa",
+		Account:      "org_hdeUXbB55sMMvJLa",
 	}
 
 	return NewOAuthTokenClient(

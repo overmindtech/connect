@@ -60,7 +60,7 @@ type OAuthTokenClient struct {
 	oAuthClient *clientcredentials.Config
 	natsConfig  *overmind.Configuration
 	natsClient  *overmind.APIClient
-	org         string
+	account     string
 
 	jwt  string
 	keys nkeys.KeyPair
@@ -74,12 +74,12 @@ type ClientCredentialsConfig struct {
 	ClientID string
 	// ClientSecret that cirresponds to the ClientID
 	ClientSecret string
-	// If Org is specified, then the ClientID must have `admin:write`
-	// permissions in order to be able to request a token for any org. If this
-	// is omitted then the org will be detmined basded on the org included in
-	// the resulting token. This will be stored in either the `org_id` or
-	// `https://api.overmind.tech/org_id_override` claims
-	Org string
+	// If Account is specified, then the ClientID must have `admin:write`
+	// permissions in order to be able to request a token for any account. If
+	// this is omitted then the account will be determined based on the account
+	// included in the resulting token. This will be stored in the
+	// `https://api.overmind.tech/account-name` claim
+	Account string
 }
 
 // NewOAuthTokenClient Generates a token client that authenticates to OAuth
@@ -128,7 +128,7 @@ func NewOAuthTokenClient(oAuthTokenURL string, overmindAPIURL string, flowConfig
 		oAuthClient: conf,
 		natsConfig:  tokenExchangeConf,
 		natsClient:  nClient,
-		org:         flowConfig.Org,
+		account:     flowConfig.Account,
 	}
 }
 
@@ -170,7 +170,7 @@ func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 	}
 
 	// Create the request for a NATS token
-	if o.org == "" {
+	if o.account == "" {
 		// Use the regular API and let it determine what our org should be
 		o.jwt, response, err = o.natsClient.CoreApi.CreateToken(ctx).TokenRequestData(overmind.TokenRequestData{
 			UserPubKey: &pubKey,
@@ -178,7 +178,7 @@ func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 		}).Execute()
 	} else {
 		// Explicitly request an org
-		o.jwt, response, err = o.natsClient.AdminApi.AdminCreateToken(ctx, o.org).TokenRequestData(overmind.TokenRequestData{
+		o.jwt, response, err = o.natsClient.AdminApi.AdminCreateToken(ctx, o.account).TokenRequestData(overmind.TokenRequestData{
 			UserPubKey: &pubKey,
 			UserName:   &hostname,
 		}).Execute()

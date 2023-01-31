@@ -7,11 +7,16 @@ require (
 	github.com/nats-io/nats.go v1.23.0
 	github.com/nats-io/nkeys v0.3.0
 	github.com/overmindtech/api-client v0.10.1
-	github.com/overmindtech/sdp-go v0.15.1
+	github.com/overmindtech/sdp-go v0.15.2
 	github.com/sirupsen/logrus v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.38.0
 	go.opentelemetry.io/otel v1.12.0
 	golang.org/x/oauth2 v0.4.0
+)
+
+require (
+	github.com/getsentry/sentry-go v0.17.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 )
 
 require (

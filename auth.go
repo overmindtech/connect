@@ -173,14 +173,14 @@ func (o *OAuthTokenClient) generateJWT(ctx context.Context) error {
 	if o.account == "" {
 		// Use the regular API and let it determine what our org should be
 		o.jwt, response, err = o.natsClient.CoreApi.CreateToken(ctx).TokenRequestData(overmind.TokenRequestData{
-			UserPubKey: &pubKey,
-			UserName:   &hostname,
+			UserPubKey: pubKey,
+			UserName:   hostname,
 		}).Execute()
 	} else {
 		// Explicitly request an org
 		o.jwt, response, err = o.natsClient.AdminApi.AdminCreateToken(ctx, o.account).TokenRequestData(overmind.TokenRequestData{
-			UserPubKey: &pubKey,
-			UserName:   &hostname,
+			UserPubKey: pubKey,
+			UserName:   hostname,
 		}).Execute()
 	}
 

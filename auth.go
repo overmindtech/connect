@@ -224,7 +224,7 @@ func (o *OAuthTokenClient) GetJWT() (string, error) {
 
 	claims.Validate(&vr)
 
-	if len(vr.Errors()) != 0 {
+	if vr.IsBlocking(true) {
 		// Regenerate the token
 		err := o.generateJWT(ctx)
 

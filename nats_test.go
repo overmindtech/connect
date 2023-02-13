@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nkeys"
 	"github.com/overmindtech/sdp-go"
 )
 
@@ -310,6 +312,49 @@ func TestNATSConnect(t *testing.T) {
 
 		ValidateNATSConnection(t, conn)
 	})
+}
+
+func TestTokenRefresh(t *testing.T) {
+	tk := GetTestOAuthTokenClient(t)
+
+	// Get a token
+	token, err := tk.GetJWT()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Artificially set the expiry and replace the token
+	claims, err := jwt.DecodeUserClaims(token)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pair, err := nkeys.CreateAccount()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claims.Expires = time.Now().Add(-10 * time.Second).Unix()
+	tk.jwt, err = claims.Encode(pair)
+	expiredToken := tk.jwt
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Get the token again
+	newToken, err := tk.GetJWT()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if expiredToken == newToken {
+		t.Error("token is unchanged")
+	}
 }
 
 func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {

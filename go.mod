@@ -6,7 +6,7 @@ require (
 	github.com/nats-io/jwt/v2 v2.3.0
 	github.com/nats-io/nats.go v1.23.0
 	github.com/nats-io/nkeys v0.3.0
-	github.com/overmindtech/api-client v0.11.1
+	github.com/overmindtech/api-client v0.12.0
 	github.com/overmindtech/sdp-go v0.16.0
 	github.com/sirupsen/logrus v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.39.0
@@ -26,7 +26,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

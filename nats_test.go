@@ -8,7 +8,7 @@ import (
 	"github.com/nats-io/jwt/v2"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nkeys"
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdp-go/sdp"
 )
 
 func TestToNatsOptions(t *testing.T) {

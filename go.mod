@@ -7,7 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.24.0
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/api-client v0.14.0
-	github.com/overmindtech/sdp-go v0.19.0
+	github.com/overmindtech/sdp-go v0.21.1-0.20230329193327-c0da6e28c7d8
 	github.com/sirupsen/logrus v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.40.0
 	go.opentelemetry.io/otel v1.14.0
@@ -30,5 +30,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.29.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 )

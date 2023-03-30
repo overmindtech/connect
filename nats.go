@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdp-go/sdp"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/nats-io/nats.go"

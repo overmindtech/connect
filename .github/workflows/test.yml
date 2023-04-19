@@ -4,6 +4,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # required for checkout
+      packages: read # access ghcr.io for api-server initdb
     strategy:
       matrix:
         go-version: [1.19.x, 1.20.x]
@@ -28,8 +31,27 @@ jobs:
           # one another
           NATS_URL: nats://nats-auth:4222
           DISABLE_KUBE: true
+          API_SERVER_PGHOST: postgres
+          API_SERVER_PGUSER: ci
+          API_SERVER_PGPASSWORD: ci
+          API_SERVER_PGDBNAME: ci
         ports:
           - 8080:8080
+        options: >-
+          --restart always
+
+      postgres:
+        image: postgres:14.6-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
@@ -43,6 +65,23 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup api-server database
+        env:
+          API_SERVER_PGHOST: localhost
+          API_SERVER_PGUSER: ci
+          API_SERVER_PGPASSWORD: ci
+          API_SERVER_PGDBNAME: ci
+        run: |
+          PG_BASE="postgresql://${API_SERVER_PGUSER}:${API_SERVER_PGPASSWORD}@${API_SERVER_PGHOST}:${API_SERVER_PGPORT:-5432}"
+          docker run --network=host --env API_SERVER_PGHOST --env API_SERVER_PGUSER --env API_SERVER_PGPASSWORD --env API_SERVER_PGDBNAME ghcr.io/overmindtech/api-server:main initdb
 
       - name: Test
         run: go test -race -timeout 5m -v ./...

@@ -81,7 +81,7 @@ jobs:
           API_SERVER_PGDBNAME: ci
         run: |
           PG_BASE="postgresql://${API_SERVER_PGUSER}:${API_SERVER_PGPASSWORD}@${API_SERVER_PGHOST}:${API_SERVER_PGPORT:-5432}"
-          docker run --network=host --env API_SERVER_PGHOST --env API_SERVER_PGUSER --env API_SERVER_PGPASSWORD --env API_SERVER_PGDBNAME ghcr.io/overmindtech/api-server:main initdb
+          docker run --network=host --env API_SERVER_PGHOST --env API_SERVER_PGUSER --env API_SERVER_PGPASSWORD --env API_SERVER_PGDBNAME ghcr.io/overmindtech/api-server-cli:main initdb
 
       - name: Test
         run: go test -race -timeout 5m -v ./...

@@ -7,7 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.25.0
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/api-client v0.14.0
-	github.com/overmindtech/sdp-go v0.26.2
+	github.com/overmindtech/sdp-go v0.28.2
 	github.com/sirupsen/logrus v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.40.0
 	go.opentelemetry.io/otel v1.14.0
@@ -17,6 +17,7 @@ require (
 
 require (
 	github.com/auth0/go-jwt-middleware/v2 v2.1.0 // indirect
+	github.com/bufbuild/connect-go v1.7.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/getsentry/sentry-go v0.20.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect

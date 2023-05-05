@@ -15,12 +15,12 @@ services:
     # Uncomment the next line to use a non-root user for all processes.
     user: vscode
 
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
-
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
     networks:
       - muticonn
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   # Authenticted NATS for testing auth mechanisms
   nats-auth:
@@ -29,7 +29,7 @@ services:
       - muticonn
 
   # Unauthenticated NATS for simpler testing
-  nats:
+  natsunauth:
     image: nats
     networks:
       - muticonn
@@ -37,8 +37,35 @@ services:
   api-server:
     image: ghcr.io/overmindtech/test-populated-api-server:main
     command: --nats-url nats://nats-auth:4222 --disable-kube
+    env_file:
+      - ./env/api-server.env
     networks:
       - muticonn
 
+  apiserverdb:
+    image: postgres:15.2-alpine
+
+    restart: always
+    env_file:
+      - ./env/api-server.env
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - muticonn
+    volumes:
+      # note that this is a parent dir of PGDIR to avoid permissions issues
+      # see https://github.com/docker-library/docs/blob/master/postgres/README.md#pgdata
+      - apiserverdb:/var/lib/postgresql/data
+
 networks:
   muticonn:
+
+volumes:
+  apiserverdb:

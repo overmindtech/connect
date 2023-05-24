@@ -31,7 +31,11 @@ var DisconnectErrHandlerDefault = func(c *nats.Conn, e error) {
 		fields["address"] = c.ConnectedAddr()
 	}
 
-	log.WithFields(fields).Error("NATS disconnected")
+	if e != nil {
+		log.WithFields(fields).Error("NATS disconnected")
+	} else {
+		log.WithFields(fields).Info("NATS disconnected")
+	}
 }
 var ReconnectHandlerDefault = func(c *nats.Conn) {
 	fields := log.Fields{}

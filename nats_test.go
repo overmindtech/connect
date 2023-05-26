@@ -361,8 +361,13 @@ func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 	t.Helper()
 	done := make(chan struct{})
 
-	sub, err := ec.Subscribe("test", sdp.NewResponseHandler("test", func(ctx context.Context, r *sdp.Response) {
-		if r.Responder == "test" {
+	sub, err := ec.Subscribe("test", sdp.NewQueryResponseHandler("test", func(ctx context.Context, qr *sdp.QueryResponse) {
+		rt, ok := qr.ResponseType.(*sdp.QueryResponse_Response)
+		if !ok {
+			t.Errorf("Received unexpected message: %v", qr)
+		}
+
+		if rt.Response.Responder == "test" {
 			done <- struct{}{}
 		}
 	}))
@@ -371,10 +376,10 @@ func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 		t.Error(err)
 	}
 
-	err = ec.Publish(context.Background(), "test", &sdp.Response{
+	err = ec.Publish(context.Background(), "test", &sdp.QueryResponse{ResponseType: &sdp.QueryResponse_Response{Response: &sdp.Response{
 		Responder: "test",
 		State:     sdp.ResponderState_COMPLETE,
-	})
+	}}})
 
 	if err != nil {
 		t.Error(err)

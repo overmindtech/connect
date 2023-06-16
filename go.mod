@@ -7,7 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.27.0
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/api-client v0.14.0
-	github.com/overmindtech/sdp-go v0.33.0
+	github.com/overmindtech/sdp-go v0.33.1
 	github.com/sirupsen/logrus v1.9.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
@@ -24,7 +24,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

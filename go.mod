@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/nats-io/jwt/v2 v2.4.1
-	github.com/nats-io/nats.go v1.26.0
+	github.com/nats-io/nats.go v1.27.0
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/api-client v0.14.0
 	github.com/overmindtech/sdp-go v0.32.2

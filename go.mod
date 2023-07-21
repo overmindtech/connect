@@ -7,7 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.27.1
 	github.com/nats-io/nkeys v0.4.4
 	github.com/overmindtech/api-client v0.14.0
-	github.com/overmindtech/sdp-go v0.36.1
+	github.com/overmindtech/sdp-go v0.36.2
 	github.com/sirupsen/logrus v1.9.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
